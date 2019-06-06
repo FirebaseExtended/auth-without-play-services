@@ -5,11 +5,13 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.nongmsauth.utils.TokenRefresher
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var auth: RestAuthProvider;
+    private lateinit var refresher: TokenRefresher;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,6 +19,7 @@ class MainActivity : AppCompatActivity() {
 
         val app = FirebaseApp.getInstance()
         auth = RestAuthProvider.getInstance(app)
+        refresher = TokenRefresher(auth)
 
         getDocButton.setOnClickListener {
             getDocument()
@@ -29,6 +32,16 @@ class MainActivity : AppCompatActivity() {
         signOutButton.setOnClickListener {
             signOut()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        this.refresher.start()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        this.refresher.stop()
     }
 
     fun signInAnonymously() {
@@ -48,7 +61,7 @@ class MainActivity : AppCompatActivity() {
     fun getDocument() {
         FirebaseFirestore.getInstance().collection("test").document("test").get()
             .addOnCompleteListener {
-                it.exception?.let{ e->
+                it.exception?.let { e ->
                     Log.e(TAG, "get failed", e)
                     return@addOnCompleteListener
                 }

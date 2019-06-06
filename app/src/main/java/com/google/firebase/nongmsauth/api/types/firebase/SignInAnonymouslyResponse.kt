@@ -5,6 +5,6 @@ data class SignInAnonymouslyResponse(
     var idToken: String = "",
     var email: String = "",
     var refreshToken: String = "",
-    var expiresIn: String =  "",
+    var expiresIn: String = "",
     var localId: String = ""
 )

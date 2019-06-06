@@ -19,8 +19,6 @@ import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenRespons
 import com.google.firebase.nongmsauth.utils.IdTokenParser
 import com.google.firebase.nongmsauth.utils.RetrofitUtils
 import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
 
@@ -47,15 +45,8 @@ class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
             .addInterceptor(DefaultInterceptor(this.apiKey))
             .build()
 
-        // Retrofit client pointed at the Firebase Auth API
-        val retrofit = Retrofit.Builder()
-            .baseUrl(FirebaseAuthApi.BASE_URL)
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        this.firebaseApi = retrofit.create(FirebaseAuthApi::class.java)
-        this.secureTokenApi = retrofit.create(SecureTokenApi::class.java)
+        this.firebaseApi = FirebaseAuthApi.getInstance(client)
+        this.secureTokenApi = SecureTokenApi.getInstance(client)
 
         this.currentUser = null
     }
@@ -154,7 +145,7 @@ class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
     companion object {
         const val TAG = "RestAuthProvider"
 
-        val INSTANCES = mutableMapOf<String,RestAuthProvider>()
+        val INSTANCES = mutableMapOf<String, RestAuthProvider>()
 
         fun getInstance(app: FirebaseApp): RestAuthProvider {
             if (!INSTANCES.containsKey(app.name)) {

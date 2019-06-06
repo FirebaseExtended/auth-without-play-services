@@ -10,10 +10,10 @@ class RetrofitUtils {
 
     companion object {
 
-        fun <T>callToTask(call: Call<T>): Task<T> {
+        fun <T> callToTask(call: Call<T>): Task<T> {
             val source = TaskCompletionSource<T>();
 
-            call.enqueue(object: Callback<T> {
+            call.enqueue(object : Callback<T> {
                 override fun onFailure(call: Call<T>, t: Throwable) {
                     source.trySetException(Exception(t))
                 }
