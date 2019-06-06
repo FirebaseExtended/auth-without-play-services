@@ -1,4 +1,4 @@
-package com.google.firebase.nongmsauth
+package com.google.firebase.nongmsauth.internal
 
 import androidx.annotation.Keep
 import com.google.firebase.FirebaseApp
@@ -6,6 +6,7 @@ import com.google.firebase.auth.internal.InternalAuthProvider
 import com.google.firebase.components.Component
 import com.google.firebase.components.ComponentRegistrar
 import com.google.firebase.components.Dependency
+import com.google.firebase.nongmsauth.FirebaseRestAuth
 
 @Keep
 class RestAuthRegistrar : ComponentRegistrar {
@@ -16,7 +17,7 @@ class RestAuthRegistrar : ComponentRegistrar {
                 .add(Dependency.required(FirebaseApp::class.java))
                 .factory { container ->
                     val firebaseApp = container.get(FirebaseApp::class.java)
-                    return@factory RestAuthProvider.getInstance(firebaseApp)
+                    return@factory FirebaseRestAuth.getInstance(firebaseApp)
                 }
                 .build()
 

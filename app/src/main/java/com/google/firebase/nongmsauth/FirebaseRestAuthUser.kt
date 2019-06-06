@@ -3,13 +3,13 @@ package com.google.firebase.nongmsauth
 import com.google.firebase.nongmsauth.utils.IdTokenParser
 import java.util.*
 
-class RestAuthUser(
+class FirebaseRestAuthUser(
     val idToken: String,
     val refreshToken: String
 ) {
 
     val userId: String;
-    val expTime: Long;
+    private val expTime: Long;
 
     init {
         val claims = IdTokenParser.parseIdToken(this.idToken)

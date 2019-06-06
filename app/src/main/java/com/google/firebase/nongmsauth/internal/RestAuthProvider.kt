@@ -1,4 +1,4 @@
-package com.google.firebase.nongmsauth
+package com.google.firebase.nongmsauth.internal
 
 import android.util.Log
 import com.google.android.gms.tasks.Task
@@ -6,9 +6,10 @@ import com.google.android.gms.tasks.TaskCompletionSource
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.GetTokenResult
 import com.google.firebase.auth.internal.IdTokenListener
-import com.google.firebase.auth.internal.InternalAuthProvider
 import com.google.firebase.internal.InternalTokenResult
 import com.google.firebase.internal.api.FirebaseNoSignedInUserException
+import com.google.firebase.nongmsauth.FirebaseRestAuth
+import com.google.firebase.nongmsauth.FirebaseRestAuthUser
 import com.google.firebase.nongmsauth.api.service.DefaultInterceptor
 import com.google.firebase.nongmsauth.api.service.FirebaseAuthApi
 import com.google.firebase.nongmsauth.api.service.SecureTokenApi
@@ -18,40 +19,48 @@ import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenRequest
 import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenResponse
 import com.google.firebase.nongmsauth.utils.IdTokenParser
 import com.google.firebase.nongmsauth.utils.RetrofitUtils
+import com.google.firebase.nongmsauth.utils.UserStorage
 import okhttp3.OkHttpClient
 
-class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
+class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
 
-    val listeners = mutableListOf<IdTokenListener>()
-    val apiKey: String
+    private val context = app.applicationContext
+    private val userStorage = UserStorage(context, app)
+    private val listeners = mutableListOf<IdTokenListener>()
+    private val firebaseApi: FirebaseAuthApi
+    private val secureTokenApi: SecureTokenApi
 
-    val firebaseApi: FirebaseAuthApi
-    val secureTokenApi: SecureTokenApi
-
-    var currentUser: RestAuthUser? = null
+    override var currentUser: FirebaseRestAuthUser? = null
         set(value) {
             Log.d(TAG, "currentUser = $value")
+
+            // Set the local field
             field = value
+
+            // Set the value in persistence
+            userStorage.set(value)
+
             listeners.forEach { listener ->
                 listener.onIdTokenChanged(InternalTokenResult(value?.idToken))
             }
         }
 
     init {
-        this.apiKey = app.options.apiKey
+        val apiKey = app.options.apiKey;
 
         // OkHttpClient with the custom interceptor
         val client = OkHttpClient.Builder()
-            .addInterceptor(DefaultInterceptor(this.apiKey))
+            .addInterceptor(DefaultInterceptor(apiKey))
             .build()
 
         this.firebaseApi = FirebaseAuthApi.getInstance(client)
         this.secureTokenApi = SecureTokenApi.getInstance(client)
 
-        this.currentUser = null
+        // TODO: What if the persisted user is expired?
+        this.currentUser = userStorage.get()
     }
 
-    fun signInAnonymously(): Task<SignInAnonymouslyResponse> {
+    override fun signInAnonymously(): Task<SignInAnonymouslyResponse> {
         val task = RetrofitUtils.callToTask(
             this.firebaseApi.signInAnonymously(
                 SignInAnonymouslyRequest(
@@ -61,7 +70,7 @@ class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
         )
 
         task.addOnSuccessListener { res ->
-            this.currentUser = RestAuthUser(res.idToken, res.refreshToken)
+            this.currentUser = FirebaseRestAuthUser(res.idToken, res.refreshToken)
         }
 
         task.addOnFailureListener { e ->
@@ -72,7 +81,7 @@ class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
         return task
     }
 
-    fun signOut() {
+    override fun signOut() {
         this.currentUser = null
     }
 
@@ -87,7 +96,7 @@ class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
         val call = this.secureTokenApi.exchangeToken(request)
         val task = RetrofitUtils.callToTask(call)
             .addOnSuccessListener { res ->
-                this.currentUser = RestAuthUser(res.id_token, res.refresh_token)
+                this.currentUser = FirebaseRestAuthUser(res.id_token, res.refresh_token)
             }
 
         return task
@@ -98,6 +107,7 @@ class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
         return GetTokenResult(token, IdTokenParser.parseIdToken(token))
     }
 
+
     override fun getUid(): String? {
         Log.d(TAG, "getUid()")
         return this.currentUser?.userId
@@ -107,10 +117,11 @@ class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
         Log.d(TAG, "getAccessToken(${forceRefresh})")
 
         val source = TaskCompletionSource<GetTokenResult>()
+        val user = this.currentUser
 
-        if (this.currentUser != null) {
-            // Already signed in
-            if (!forceRefresh) {
+        if (user != null) {
+            val needsRefresh = forceRefresh || user.isExpired()
+            if (!needsRefresh) {
                 // Return the current token, no need to check anything
                 source.trySetResult(currentUserToTokenResult())
             } else {
@@ -131,9 +142,12 @@ class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
         return source.task
     }
 
+    /**
+     * Note: the JavaDoc says that we should start proactive token refresh here. In order to have better lifecycle
+     * management, we force the user to manually start a "FirebaseTokenRefresher" instead.
+     */
     override fun addIdTokenListener(listener: IdTokenListener) {
         Log.d(TAG, "addIdTokenListener: $listener")
-        // TODO: Implement and start proactive refresh
         listeners.add(listener)
     }
 
@@ -144,16 +158,5 @@ class RestAuthProvider(app: FirebaseApp) : InternalAuthProvider {
 
     companion object {
         const val TAG = "RestAuthProvider"
-
-        val INSTANCES = mutableMapOf<String, RestAuthProvider>()
-
-        fun getInstance(app: FirebaseApp): RestAuthProvider {
-            if (!INSTANCES.containsKey(app.name)) {
-                val instance = RestAuthProvider(app)
-                INSTANCES.set(app.name, instance);
-            }
-
-            return INSTANCES.get(app.name)!!;
-        }
     }
 }

@@ -20,7 +20,7 @@
         </activity>
 
         <service android:name="com.google.firebase.components.ComponentDiscoveryService">
-            <meta-data android:name="com.google.firebase.components:com.google.firebase.nongmsauth.RestAuthRegistrar"
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.nongmsauth.internal.RestAuthRegistrar"
                        android:value="com.google.firebase.components.ComponentRegistrar" />
         </service>
 
