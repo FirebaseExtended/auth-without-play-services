@@ -35,34 +35,11 @@ class IdTokenParser {
             }
 
             val encodedToken = parts[1]
-            try {
+            return try {
                 val decodedToken = String(Base64Utils.decodeUrlSafeNoPadding(encodedToken), Charset.defaultCharset())
-                val map = parseRawUserInfo(decodedToken)
-                if (map == null) {
-                    return mapOf()
-                } else {
-                    return map
-                }
+                parseRawUserInfo(decodedToken) ?: mapOf()
             } catch (e: UnsupportedEncodingException) {
-                return mapOf()
-            }
-
-        }
-
-        fun parseRawUserInfo(rawUserInfo: String): Map<String, Any>? {
-            if (TextUtils.isEmpty(rawUserInfo)) {
-                return null
-            }
-
-            try {
-                val jsonObject = JSONObject(rawUserInfo)
-                return if (jsonObject !== JSONObject.NULL) {
-                    toMap(jsonObject)
-                } else {
-                    null
-                }
-            } catch (e: Exception) {
-                throw FirebaseException(e.message!!)
+                mapOf()
             }
 
         }
@@ -82,7 +59,7 @@ class IdTokenParser {
                     value = toMap(value)
                 }
 
-                map.put(key, value)
+                map[key] = value
             }
             return map
         }
@@ -102,6 +79,23 @@ class IdTokenParser {
             return list
         }
 
-    }
+        private fun parseRawUserInfo(rawUserInfo: String): Map<String, Any>? {
+            if (TextUtils.isEmpty(rawUserInfo)) {
+                return null
+            }
 
+            try {
+                val jsonObject = JSONObject(rawUserInfo)
+                return if (jsonObject !== JSONObject.NULL) {
+                    toMap(jsonObject)
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                throw FirebaseException(e.message!!)
+            }
+
+        }
+
+    }
 }

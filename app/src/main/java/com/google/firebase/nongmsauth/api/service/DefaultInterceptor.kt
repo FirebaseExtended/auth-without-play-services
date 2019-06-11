@@ -21,7 +21,7 @@ import okhttp3.Response
 /**
  * Adds API Key param and Content-Type header to every request.
  */
-class DefaultInterceptor(val apiKey: String) : Interceptor {
+class DefaultInterceptor(private val apiKey: String) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()

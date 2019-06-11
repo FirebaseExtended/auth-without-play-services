@@ -30,7 +30,7 @@ interface SecureTokenApi {
     fun exchangeToken(@Body request: ExchangeTokenRequest): Call<ExchangeTokenResponse>
 
     companion object {
-        const val BASE_URL = "https://securetoken.googleapis.com/"
+        private const val BASE_URL = "https://securetoken.googleapis.com/"
 
         fun getInstance(client: OkHttpClient): SecureTokenApi {
             // Retrofit client pointed at the Firebase Auth API

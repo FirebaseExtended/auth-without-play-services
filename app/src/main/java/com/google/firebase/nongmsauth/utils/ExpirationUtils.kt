@@ -13,8 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.firebase.nongmsauth.api.types.firebase
+package com.google.firebase.nongmsauth.utils
 
-data class SignInAnonymouslyRequest(
-    var requestSecureToken: Boolean = true
-)
+import com.google.firebase.nongmsauth.FirebaseRestAuthUser
+import java.util.*
+
+class ExpirationUtils {
+    companion object {
+        fun isExpired(user: FirebaseRestAuthUser): Boolean {
+            return expiresInSeconds(user) <= 0
+        }
+
+        fun expiresInSeconds(user: FirebaseRestAuthUser): Long {
+            val now = Date().time / 1000
+            return user.expirationTime - now
+        }
+    }
+}

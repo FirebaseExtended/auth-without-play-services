@@ -114,7 +114,7 @@ auth.signOut()
 The real `FirebaseAuth` library proactively refreshes your ID Token as it get close to expiry,
 which means that you never have to think about token management.
 
-In this example you must instantiate the `FirebaseTokenRefresher` class to perform token management.
+In this example you must instruct the `FirebaseTokenRefresher` class to perform token management.
 This class binds to a `LifecycleOwner` to make sure that it only refreshes your token when the app
 is in the foreground.
 
@@ -122,12 +122,12 @@ In your `Activity`:
 
 ```kotlin
 // See above
-val auth = ...;
+val auth = FirebaseRestAuth.getInstance(app);
 
-// Create a TokenRefresher, which will proactively refresh the user's ID token 10 minutes
-// before it expires as long as the lifecycle is alive. Response to the ON_START and ON_STOP
+// Start the TokenRefresher, which will proactively refresh the user's ID token 10 minutes
+// before it expires as long as the lifecycle is alive. Responds to the ON_START and ON_STOP
 // lifecycle events.
-val refresher = TokenRefresher(auth, this /* LifecycleOwner */);
+auth.tokenRefresher.bindTo(this /* LifecycleOwner */)
 ```
 
 ## Example

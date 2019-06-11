@@ -17,16 +17,16 @@ package com.google.firebase.nongmsauth
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var auth: FirebaseRestAuth;
-    private lateinit var refresher: FirebaseTokenRefresher;
+    private lateinit var auth: FirebaseRestAuth
+    private lateinit var refresher: FirebaseTokenRefresher
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
 
         val app = FirebaseApp.getInstance()
         auth = FirebaseRestAuth.getInstance(app)
-        refresher = FirebaseTokenRefresher(auth, this)
+        auth.tokenRefresher.bindTo(this)
 
         getDocButton.setOnClickListener {
             getDocument()
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         updateUI()
     }
 
-    fun signInAnonymously() {
+    private fun signInAnonymously() {
         auth.signInAnonymously()
             .addOnSuccessListener { res ->
                 Log.d(TAG, "signInAnonymously: ${res}")
@@ -63,23 +63,23 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    fun signOut() {
+    private fun signOut() {
         auth.signOut()
         updateUI()
     }
 
-    fun getDocument() {
+    private fun getDocument() {
         FirebaseFirestore.getInstance().collection("test").document("test").get()
             .addOnCompleteListener {
                 it.exception?.let { e ->
                     Log.e(TAG, "get failed", e)
-                    toast("Error retrieving document...")
+                    snackbar("Error retrieving document...")
                     return@addOnCompleteListener
                 }
 
                 it.result?.let { res ->
                     Log.d(TAG, "get success: $res")
-                    toast("Successfully retrieved document!")
+                    snackbar("Successfully retrieved document!")
                 }
             }
     }
@@ -98,8 +98,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun toast(msg: String) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    fun snackbar(msg: String) {
+        Snackbar.make(findViewById(android.R.id.content), msg, Snackbar.LENGTH_SHORT).show()
     }
 
     companion object {

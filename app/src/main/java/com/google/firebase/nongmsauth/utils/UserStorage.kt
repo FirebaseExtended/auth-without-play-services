@@ -37,8 +37,8 @@ class UserStorage(context: Context, private val app: FirebaseApp) {
     }
 
     fun get(): FirebaseRestAuthUser? {
-        val idToken = this.prefs.getString(getKey("idToken"), null);
-        val refreshToken = this.prefs.getString(getKey("refreshToken"), null);
+        val idToken = this.prefs.getString(getKey("idToken"), null)
+        val refreshToken = this.prefs.getString(getKey("refreshToken"), null)
 
         if (idToken != null && refreshToken != null) {
             return FirebaseRestAuthUser(idToken, refreshToken)

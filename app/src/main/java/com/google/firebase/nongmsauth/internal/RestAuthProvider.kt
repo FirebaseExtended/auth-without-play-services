@@ -25,6 +25,7 @@ import com.google.firebase.internal.InternalTokenResult
 import com.google.firebase.internal.api.FirebaseNoSignedInUserException
 import com.google.firebase.nongmsauth.FirebaseRestAuth
 import com.google.firebase.nongmsauth.FirebaseRestAuthUser
+import com.google.firebase.nongmsauth.FirebaseTokenRefresher
 import com.google.firebase.nongmsauth.api.service.DefaultInterceptor
 import com.google.firebase.nongmsauth.api.service.FirebaseAuthApi
 import com.google.firebase.nongmsauth.api.service.SecureTokenApi
@@ -32,6 +33,7 @@ import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyReques
 import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyResponse
 import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenRequest
 import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenResponse
+import com.google.firebase.nongmsauth.utils.ExpirationUtils
 import com.google.firebase.nongmsauth.utils.IdTokenParser
 import com.google.firebase.nongmsauth.utils.RetrofitUtils
 import com.google.firebase.nongmsauth.utils.UserStorage
@@ -44,6 +46,8 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
     private val listeners = mutableListOf<IdTokenListener>()
     private val firebaseApi: FirebaseAuthApi
     private val secureTokenApi: SecureTokenApi
+
+    override val tokenRefresher = FirebaseTokenRefresher(this)
 
     override var currentUser: FirebaseRestAuthUser? = null
         set(value) {
@@ -61,7 +65,7 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
         }
 
     init {
-        val apiKey = app.options.apiKey;
+        val apiKey = app.options.apiKey
 
         // OkHttpClient with the custom interceptor
         val client = OkHttpClient.Builder()
@@ -78,9 +82,7 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
     override fun signInAnonymously(): Task<SignInAnonymouslyResponse> {
         val task = RetrofitUtils.callToTask(
             this.firebaseApi.signInAnonymously(
-                SignInAnonymouslyRequest(
-                    true
-                )
+                SignInAnonymouslyRequest(true)
             )
         )
 
@@ -102,19 +104,15 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
 
     private fun refreshUserToken(): Task<ExchangeTokenResponse> {
         val refreshToken = this.currentUser?.refreshToken
-
-        if (refreshToken == null) {
-            throw Exception("Can't refresh token, current user has no refresh token");
-        }
+            ?: throw Exception("Can't refresh token, current user has no refresh token")
 
         val request = ExchangeTokenRequest("refresh_token", refreshToken)
         val call = this.secureTokenApi.exchangeToken(request)
-        val task = RetrofitUtils.callToTask(call)
-            .addOnSuccessListener { res ->
-                this.currentUser = FirebaseRestAuthUser(res.id_token, res.refresh_token)
-            }
 
-        return task
+        return RetrofitUtils.callToTask(call)
+            .addOnSuccessListener { res ->
+                currentUser = FirebaseRestAuthUser(res.id_token, res.refresh_token)
+            }
     }
 
     private fun currentUserToTokenResult(): GetTokenResult {
@@ -129,13 +127,13 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
     }
 
     override fun getAccessToken(forceRefresh: Boolean): Task<GetTokenResult> {
-        Log.d(TAG, "getAccessToken(${forceRefresh})")
+        Log.d(TAG, "getAccessToken($forceRefresh)")
 
         val source = TaskCompletionSource<GetTokenResult>()
         val user = this.currentUser
 
         if (user != null) {
-            val needsRefresh = forceRefresh || user.isExpired()
+            val needsRefresh = forceRefresh || ExpirationUtils.isExpired(user)
             if (!needsRefresh) {
                 // Return the current token, no need to check anything
                 source.trySetResult(currentUserToTokenResult())
@@ -151,7 +149,7 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
             }
         } else {
             // Not yet signed in
-            source.trySetException(FirebaseNoSignedInUserException("Please sign in before trying to get a token"));
+            source.trySetException(FirebaseNoSignedInUserException("Please sign in before trying to get a token"))
         }
 
         return source.task

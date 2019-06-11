@@ -30,7 +30,7 @@ interface FirebaseAuthApi {
     fun signInAnonymously(@Body request: SignInAnonymouslyRequest): Call<SignInAnonymouslyResponse>
 
     companion object {
-        const val BASE_URL = "https://www.googleapis.com/"
+        private const val BASE_URL = "https://www.googleapis.com/"
 
         fun getInstance(client: OkHttpClient): FirebaseAuthApi {
             // Retrofit client pointed at the Firebase Auth API

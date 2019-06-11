@@ -27,7 +27,7 @@ import com.google.firebase.nongmsauth.FirebaseRestAuth
 class RestAuthRegistrar : ComponentRegistrar {
 
     override fun getComponents(): MutableList<Component<*>> {
-        val restAuthCompontent =
+        val restAuthComponent =
             Component.builder(InternalAuthProvider::class.java)
                 .add(Dependency.required(FirebaseApp::class.java))
                 .factory { container ->
@@ -36,7 +36,7 @@ class RestAuthRegistrar : ComponentRegistrar {
                 }
                 .build()
 
-        return mutableListOf(restAuthCompontent)
+        return mutableListOf(restAuthComponent)
     }
 
 }
