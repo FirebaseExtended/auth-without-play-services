@@ -19,6 +19,7 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.internal.InternalAuthProvider
 import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyResponse
+import com.google.firebase.nongmsauth.api.types.firebase.SignInWithCredentialResponse
 import com.google.firebase.nongmsauth.internal.RestAuthProvider
 interface FirebaseRestAuth : InternalAuthProvider {
 
@@ -27,6 +28,7 @@ interface FirebaseRestAuth : InternalAuthProvider {
 
     fun signInAnonymously(): Task<SignInAnonymouslyResponse>
     fun signOut()
+    fun signInWithGoogle(idToken: String, provider: String = "google.com"): Task<SignInWithCredentialResponse>
 
     companion object {
         private val INSTANCE = mutableMapOf<String, RestAuthProvider>()
@@ -34,10 +36,10 @@ interface FirebaseRestAuth : InternalAuthProvider {
         fun getInstance(app: FirebaseApp): FirebaseRestAuth {
             if (!INSTANCE.containsKey(app.name)) {
                 val instance = RestAuthProvider(app)
-                INSTANCE.set(app.name, instance)
+                INSTANCE[app.name] = instance
             }
 
-            return INSTANCE.get(app.name)!!
+            return INSTANCE[app.name]!!
         }
     }
 }

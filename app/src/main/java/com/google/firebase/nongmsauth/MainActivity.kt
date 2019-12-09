@@ -15,18 +15,25 @@
  */
 package com.google.firebase.nongmsauth
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedListener {
 
     private lateinit var auth: FirebaseRestAuth
     private lateinit var refresher: FirebaseTokenRefresher
+    private lateinit var googleApiClient: GoogleApiClient
+    private val RCSIGNIN = 123
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,12 +43,30 @@ class MainActivity : AppCompatActivity() {
         auth = FirebaseRestAuth.getInstance(app)
         auth.tokenRefresher.bindTo(this)
 
+        googleApiClient = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestId()
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .build()
+            .let { signInConfigBuilder ->
+                // Build a GoogleApiClient with access to the Google Sign-In API and the
+                // options specified in the sign-in configuration.
+                GoogleApiClient.Builder(this)
+                    .enableAutoManage(
+                        this /* FragmentActivity */,
+                        this /* OnConnectionFailedListener */
+                    )
+                    .addApi(Auth.GOOGLE_SIGN_IN_API, signInConfigBuilder)
+                    .build()
+            }
+
         getDocButton.setOnClickListener {
             getDocument()
         }
 
         signInButton.setOnClickListener {
-            signInAnonymously()
+            // signInAnonymously()
+            signInWithGoogle()
         }
 
         signOutButton.setOnClickListener {
@@ -51,10 +76,16 @@ class MainActivity : AppCompatActivity() {
         updateUI()
     }
 
+    private fun signInWithGoogle() {
+        Auth.GoogleSignInApi.getSignInIntent(googleApiClient).let {
+            startActivityForResult(it, RCSIGNIN)
+        }
+    }
+
     private fun signInAnonymously() {
         auth.signInAnonymously()
             .addOnSuccessListener { res ->
-                Log.d(TAG, "signInAnonymously: ${res}")
+                Log.d(TAG, "signInAnonymously: $res")
                 updateUI()
             }
             .addOnFailureListener { err ->
@@ -92,10 +123,36 @@ class MainActivity : AppCompatActivity() {
         signOutButton.isEnabled = signedIn
 
         if (user == null) {
-            authStatus.setText("Signed out.")
+            authStatus.text = "Signed out."
         } else {
-            authStatus.setText("Signed in as ${user.userId}")
+            authStatus.text = "Signed in as ${user.userId}"
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...)
+        if (requestCode == RCSIGNIN) {
+            Auth.GoogleSignInApi.getSignInResultFromIntent(data)?.apply {
+                if (isSuccess) {
+                    auth.signInWithGoogle(signInAccount!!.idToken!!)
+                        .addOnFailureListener {
+                            Log.w(TAG, "signInWithGoogle: failure", it)
+                            updateUI()
+                        }
+                        .addOnSuccessListener {
+                            Log.d(TAG, "signInWithGoogle: $it")
+                            updateUI()
+                        }
+                }
+            }
+        }
+    }
+
+    override fun onConnectionFailed(res: ConnectionResult) {
+        snackbar("Error trying to log in with Google")
+        Log.e(TAG, res.errorMessage.toString())
     }
 
     fun snackbar(msg: String) {

@@ -31,6 +31,8 @@ import com.google.firebase.nongmsauth.api.service.FirebaseAuthApi
 import com.google.firebase.nongmsauth.api.service.SecureTokenApi
 import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyRequest
 import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyResponse
+import com.google.firebase.nongmsauth.api.types.firebase.SignInWithCredentialRequest
+import com.google.firebase.nongmsauth.api.types.firebase.SignInWithCredentialResponse
 import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenRequest
 import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenResponse
 import com.google.firebase.nongmsauth.utils.ExpirationUtils
@@ -92,6 +94,34 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
 
         task.addOnFailureListener { e ->
             Log.e(TAG, "signInAnonymously: failed", e)
+            this.currentUser = null
+        }
+
+        return task
+    }
+
+    override fun signInWithGoogle(idToken: String, provider: String): Task<SignInWithCredentialResponse> {
+        val task = RetrofitUtils.callToTask(
+            this.firebaseApi.signInWithCredential(
+                SignInWithCredentialRequest(
+                    postBody = "id_token=$idToken&providerId=$provider",
+                    returnSecureToken = true,
+                    returnIdpCredential = true,
+                    requestUri = "http://localhost"
+                )
+            )
+        )
+
+        task.addOnSuccessListener { res ->
+            this.currentUser = FirebaseRestAuthUser(
+                idToken = res.idToken,
+                refreshToken = res.refreshToken
+            )
+            Log.d(TAG, "signInWithCredential: successful!, uid: ${currentUser?.userId}")
+        }
+
+        task.addOnFailureListener { e ->
+            Log.e(TAG, "signInWithCredential: failed", e)
             this.currentUser = null
         }
 
