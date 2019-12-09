@@ -109,6 +109,13 @@ To sign out, call the synchronous `signOut` method:
 auth.signOut()
 ```
 
+### Authentication with Google
+
+This example was forked and edited to show how to login with Google as well as anonymously.
+An example is provided in MainActivity.kt which uses Google Auth for Wear OS (https://developer.android.com/training/wearables/apps/auth-wear) to log in and then send the idToken to Firebase for authentication. This was not tested thoroughly, but it appears to be working fine.
+In theory it's also possible to extend this to Facebook authentication, Twitter, Email etc., but that would be more difficult for the user as they would have to log in using the keyboard.
+I followed the Firebase Auth REST API (https://firebase.google.com/docs/reference/rest/auth).
+
 ### Token Management
 
 The real `FirebaseAuth` library proactively refreshes your ID Token as it get close to expiry,
