@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.firebase.nongmsauth.api.types.firebase
+package com.google.firebase.nongmsauth.api.types.identitytoolkit
 
 data class SignInAnonymouslyRequest(
-    var requestSecureToken: Boolean = true
+    val requestSecureToken: Boolean = true
 )

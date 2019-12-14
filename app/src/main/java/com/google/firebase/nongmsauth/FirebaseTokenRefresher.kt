@@ -121,7 +121,7 @@ class FirebaseTokenRefresher(val auth: FirebaseRestAuth) :
     }
 
     companion object {
-        const val TAG = "TokenRefresher"
+        private val TAG = FirebaseTokenRefresher::class.java.simpleName
 
         const val TEN_MINUTES_SECS = 10 * 60
 

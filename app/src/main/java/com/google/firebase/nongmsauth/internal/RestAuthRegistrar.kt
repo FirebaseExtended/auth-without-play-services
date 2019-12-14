@@ -23,6 +23,10 @@ import com.google.firebase.components.ComponentRegistrar
 import com.google.firebase.components.Dependency
 import com.google.firebase.nongmsauth.FirebaseRestAuth
 
+/**
+ * Required so other Firebase libraries can find this implementation of InternalAuthProvider.
+ * Note, you cannot also include the FirebaseAuth client library in your build.
+ */
 @Keep
 class RestAuthRegistrar : ComponentRegistrar {
 
