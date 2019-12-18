@@ -39,4 +39,4 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.7.0'
 }
 
-//apply plugin: 'com.google.gms.google-services'    // uncomment for actual app, but you must add your google-services.json as a sibling file
+apply plugin: 'com.google.gms.google-services'
