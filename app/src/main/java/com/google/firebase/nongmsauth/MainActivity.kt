@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     private fun signInAnonymously() {
         auth.signInAnonymously()
             .addOnSuccessListener { res ->
-                Log.d(TAG, "signInAnonymously: ${res}")
+                Log.d(TAG, "signInAnonymously: $res")
                 updateUI()
             }
             .addOnFailureListener { err ->
@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    fun updateUI() {
+    private fun updateUI() {
         val user = auth.currentUser
         val signedIn = user != null
 
@@ -92,17 +92,17 @@ class MainActivity : AppCompatActivity() {
         signOutButton.isEnabled = signedIn
 
         if (user == null) {
-            authStatus.setText("Signed out.")
+            authStatus.text = "Signed out."
         } else {
-            authStatus.setText("Signed in as ${user.userId}")
+            authStatus.text = "Signed in as ${user.userId}"
         }
     }
 
-    fun snackbar(msg: String) {
+    private fun snackbar(msg: String) {
         Snackbar.make(findViewById(android.R.id.content), msg, Snackbar.LENGTH_SHORT).show()
     }
 
     companion object {
-        const val TAG = "MainActivity"
+        private val TAG = MainActivity::class.java.simpleName
     }
 }

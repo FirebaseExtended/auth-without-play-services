@@ -26,11 +26,16 @@ import com.google.firebase.internal.api.FirebaseNoSignedInUserException
 import com.google.firebase.nongmsauth.FirebaseRestAuth
 import com.google.firebase.nongmsauth.FirebaseRestAuthUser
 import com.google.firebase.nongmsauth.FirebaseTokenRefresher
-import com.google.firebase.nongmsauth.api.service.DefaultInterceptor
-import com.google.firebase.nongmsauth.api.service.FirebaseAuthApi
+import com.google.firebase.nongmsauth.api.service.FirebaseKeyInterceptor
+import com.google.firebase.nongmsauth.api.service.IdentityToolkitApi
 import com.google.firebase.nongmsauth.api.service.SecureTokenApi
-import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyRequest
-import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInAnonymouslyRequest
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithCustomTokenRequest
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithCustomTokenResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithEmailRequest
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithEmailResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInAnonymouslyResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignUpWithEmailResponse
 import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenRequest
 import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenResponse
 import com.google.firebase.nongmsauth.utils.ExpirationUtils
@@ -39,12 +44,17 @@ import com.google.firebase.nongmsauth.utils.RetrofitUtils
 import com.google.firebase.nongmsauth.utils.UserStorage
 import okhttp3.OkHttpClient
 
-class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
+/**
+ * Implementation of FirebaseRestAuth
+ * @param app FirebaseApp
+ * @param apiKey Web API Key from Firebase Console, usually provided by google-services.json, but there are some cases where this does not match your assigned Web API Key and you will need to override
+ */
+class RestAuthProvider(app: FirebaseApp, apiKey: String = app.options.apiKey) : FirebaseRestAuth {
 
     private val context = app.applicationContext
     private val userStorage = UserStorage(context, app)
     private val listeners = mutableListOf<IdTokenListener>()
-    private val firebaseApi: FirebaseAuthApi
+    private val firebaseApi: IdentityToolkitApi
     private val secureTokenApi: SecureTokenApi
 
     override val tokenRefresher = FirebaseTokenRefresher(this)
@@ -65,14 +75,12 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
         }
 
     init {
-        val apiKey = app.options.apiKey
-
         // OkHttpClient with the custom interceptor
         val client = OkHttpClient.Builder()
-            .addInterceptor(DefaultInterceptor(apiKey))
+            .addInterceptor(FirebaseKeyInterceptor(apiKey))
             .build()
 
-        this.firebaseApi = FirebaseAuthApi.getInstance(client)
+        this.firebaseApi = IdentityToolkitApi.getInstance(client)
         this.secureTokenApi = SecureTokenApi.getInstance(client)
 
         // TODO: What if the persisted user is expired?
@@ -80,22 +88,55 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
     }
 
     override fun signInAnonymously(): Task<SignInAnonymouslyResponse> {
-        val task = RetrofitUtils.callToTask(
+        return RetrofitUtils.callToTask(
             this.firebaseApi.signInAnonymously(
-                SignInAnonymouslyRequest(true)
+                SignInAnonymouslyRequest()
             )
-        )
-
-        task.addOnSuccessListener { res ->
+        ).addOnSuccessListener { res ->
             this.currentUser = FirebaseRestAuthUser(res.idToken, res.refreshToken)
-        }
-
-        task.addOnFailureListener { e ->
+        }.addOnFailureListener { e ->
             Log.e(TAG, "signInAnonymously: failed", e)
             this.currentUser = null
         }
+    }
 
-        return task
+    override fun signInWithCustomToken(token: String): Task<SignInWithCustomTokenResponse> {
+        return RetrofitUtils.callToTask(
+            this.firebaseApi.signInWithCustomToken(
+                SignInWithCustomTokenRequest(token)
+            )
+        ).addOnSuccessListener { res ->
+            this.currentUser = FirebaseRestAuthUser(res.idToken, res.refreshToken)
+        }.addOnFailureListener { e ->
+            Log.e(TAG, "signInWithCustomToken: failed", e)
+            this.currentUser = null
+        }
+    }
+
+    override fun signInWithEmail(email: String, password: String): Task<SignInWithEmailResponse> {
+        return RetrofitUtils.callToTask(
+            this.firebaseApi.signInWithPassword(
+                SignInWithEmailRequest(email, password)
+            )
+        ).addOnSuccessListener { res ->
+            this.currentUser = FirebaseRestAuthUser(res.idToken, res.refreshToken)
+        }.addOnFailureListener { e ->
+            Log.e(TAG, "signInWithEmail: failed", e)
+            this.currentUser = null
+        }
+    }
+
+    override fun signUpWithEmail(email: String, password: String): Task<SignUpWithEmailResponse> {
+        return RetrofitUtils.callToTask(
+            this.firebaseApi.signUpWithEmail(
+                SignInWithEmailRequest(email, password)
+            )
+        ).addOnSuccessListener { res ->
+            this.currentUser = FirebaseRestAuthUser(res.idToken, res.refreshToken)
+        }.addOnFailureListener { e ->
+            Log.e(TAG, "signUpWithEmail: failed", e)
+            this.currentUser = null
+        }
     }
 
     override fun signOut() {
@@ -119,7 +160,6 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
         val token = this.currentUser!!.idToken
         return GetTokenResult(token, IdTokenParser.parseIdToken(token))
     }
-
 
     override fun getUid(): String? {
         Log.d(TAG, "getUid()")
@@ -170,6 +210,6 @@ class RestAuthProvider(app: FirebaseApp) : FirebaseRestAuth {
     }
 
     companion object {
-        const val TAG = "RestAuthProvider"
+        private val TAG = RestAuthProvider::class.java.simpleName
     }
 }
