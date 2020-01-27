@@ -52,7 +52,7 @@ class UserStorage(context: Context, private val app: FirebaseApp) {
     }
 
     private fun getKey(field: String): String {
-        return "UserStorage___${app.name}__$field"
+        return "UserStorage___${app.options.projectId}__$field"
     }
 
 }
