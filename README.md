@@ -11,7 +11,13 @@ The following Firebase products which depend on Firebase Authentication should w
   * Cloud Storage
 
 
-## Disclaimer
+## Status
+
+![Status: Experimental](https://img.shields.io/badge/Status-Experimental-blue)
+
+This repository is maintained by Googlers but is not a supported Firebase product.  Issues here are answered by maintainers and other community members on GitHub on a best-effort basis.
+
+## Limitations
 
 It's important to understand the limitations of this sample code:
 
