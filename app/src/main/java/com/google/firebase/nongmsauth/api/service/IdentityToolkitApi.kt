@@ -22,6 +22,9 @@ import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithEmailR
 import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithEmailResponse
 import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInAnonymouslyResponse
 import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignUpWithEmailResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithCredentialRequest
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithCredentialResponse
+
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -46,6 +49,9 @@ interface IdentityToolkitApi {
 
     @POST("v1/accounts:signUp")
     fun signUpWithEmail(@Body request: SignInWithEmailRequest): Call<SignUpWithEmailResponse>
+
+    @POST("v1/accounts:signInWithIdp")
+    fun signInWithCredential(@Body request: SignInWithCredentialRequest): Call<SignInWithCredentialResponse>
 
     companion object {
         private const val BASE_URL = "https://identitytoolkit.googleapis.com/"

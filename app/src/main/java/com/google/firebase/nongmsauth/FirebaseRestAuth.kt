@@ -22,7 +22,7 @@ import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithCustom
 import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithEmailResponse
 import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInAnonymouslyResponse
 import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignUpWithEmailResponse
-import com.google.firebase.nongmsauth.api.types.firebase.SignInWithCredentialResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithCredentialResponse
 import com.google.firebase.nongmsauth.internal.RestAuthProvider
 interface FirebaseRestAuth : InternalAuthProvider {
 

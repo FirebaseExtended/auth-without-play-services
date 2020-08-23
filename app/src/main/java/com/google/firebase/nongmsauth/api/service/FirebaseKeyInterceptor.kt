@@ -28,15 +28,14 @@ class FirebaseKeyInterceptor(private val apiKey: String) : Interceptor {
         val originalUrl = request.url()
 
         val newUrl = originalUrl.newBuilder()
-            .addQueryParameter("key", this.apiKey)
-            .build()
+                .addQueryParameter("key", this.apiKey)
+                .build()
 
         val requestBuilder = request.newBuilder()
-            .header("Content-Type", "application/json")
-            .header("Accept-Encoding", "identity")  // needed because the response is not compressed when the header says it is. See https://github.com/square/okio/issues/299
-            .url(newUrl)
+                .header("Content-Type", "application/json")
+                .header("Accept-Encoding", "identity")  // needed because the response is not compressed when the header says it is. See https://github.com/square/okio/issues/299
+                .url(newUrl)
 
         return chain.proceed(requestBuilder.build())
     }
-
 }

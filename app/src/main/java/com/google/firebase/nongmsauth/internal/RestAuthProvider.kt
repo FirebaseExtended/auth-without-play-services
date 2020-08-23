@@ -29,17 +29,7 @@ import com.google.firebase.nongmsauth.FirebaseTokenRefresher
 import com.google.firebase.nongmsauth.api.service.FirebaseKeyInterceptor
 import com.google.firebase.nongmsauth.api.service.IdentityToolkitApi
 import com.google.firebase.nongmsauth.api.service.SecureTokenApi
-import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInAnonymouslyRequest
-import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithCustomTokenRequest
-import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithCustomTokenResponse
-import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithEmailRequest
-import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithEmailResponse
-import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInAnonymouslyResponse
-import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignUpWithEmailResponse
-import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyRequest
-import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyResponse
-import com.google.firebase.nongmsauth.api.types.firebase.SignInWithCredentialRequest
-import com.google.firebase.nongmsauth.api.types.firebase.SignInWithCredentialResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.*
 import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenRequest
 import com.google.firebase.nongmsauth.api.types.securetoken.ExchangeTokenResponse
 import com.google.firebase.nongmsauth.utils.ExpirationUtils
@@ -143,33 +133,36 @@ class RestAuthProvider(app: FirebaseApp, apiKey: String = app.options.apiKey) : 
         }
     }
 
-override fun signInWithGoogle(idToken: String, provider: String): Task<SignInWithCredentialResponse> {
-    val task = RetrofitUtils.callToTask(
-        this.firebaseApi.signInWithCredential(
-            SignInWithCredentialRequest(
-                postBody = "id_token=$idToken&providerId=$provider",
-                returnSecureToken = true,
-                returnIdpCredential = true,
-                requestUri = "http://localhost"
+    override fun signInWithGoogle(
+        idToken: String,
+        provider: String
+    ): Task<SignInWithCredentialResponse> {
+        val task = RetrofitUtils.callToTask(
+            this.firebaseApi.signInWithCredential(
+                SignInWithCredentialRequest(
+                    postBody = "id_token=$idToken&providerId=$provider",
+                    returnSecureToken = true,
+                    returnIdpCredential = true,
+                    requestUri = "http://localhost"
+                )
             )
         )
-    )
 
-    task.addOnSuccessListener { res ->
-        this.currentUser = FirebaseRestAuthUser(
-            idToken = res.idToken,
-            refreshToken = res.refreshToken
-        )
-        Log.d(TAG, "signInWithCredential: successful!, uid: ${currentUser?.userId}")
+        task.addOnSuccessListener { res ->
+            this.currentUser = FirebaseRestAuthUser(
+                idToken = res.idToken,
+                refreshToken = res.refreshToken
+            )
+            Log.d(TAG, "signInWithCredential: successful!, uid: ${currentUser?.userId}")
+        }
+
+        task.addOnFailureListener { e ->
+            Log.e(TAG, "signInWithCredential: failed", e)
+            this.currentUser = null
+        }
+
+        return task
     }
-
-    task.addOnFailureListener { e ->
-        Log.e(TAG, "signInWithCredential: failed", e)
-        this.currentUser = null
-    }
-
-    return task
-}
 
     override fun signOut() {
         this.currentUser = null
