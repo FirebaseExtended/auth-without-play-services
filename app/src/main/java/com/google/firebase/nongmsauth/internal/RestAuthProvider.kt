@@ -81,21 +81,19 @@ class RestAuthProvider(app: FirebaseApp, apiKey: String = app.options.apiKey) : 
         this.currentUser = userStorage.get()
     }
 
-    override fun signInAnonymously(): Task<SignInAnonymouslyResponse> {
-        return RetrofitUtils.callToTask(
-            this.firebaseApi.signInAnonymously(
-                SignInAnonymouslyRequest()
-            )
-        ).addOnSuccessListener { res ->
-            this.currentUser = FirebaseRestAuthUser(res.idToken, res.refreshToken)
-        }.addOnFailureListener { e ->
-            Log.e(TAG, "signInAnonymously: failed", e)
-            this.currentUser = null
-        }
+    override fun signInAnonymously(): Task<SignInAnonymouslyResponse> = RetrofitUtils.callToTask(
+        this.firebaseApi.signInAnonymously(
+            SignInAnonymouslyRequest()
+        )
+    ).addOnSuccessListener { res ->
+        this.currentUser = FirebaseRestAuthUser(res.idToken, res.refreshToken)
+    }.addOnFailureListener { e ->
+        Log.e(TAG, "signInAnonymously: failed", e)
+        this.currentUser = null
     }
 
-    override fun signInWithCustomToken(token: String): Task<SignInWithCustomTokenResponse> {
-        return RetrofitUtils.callToTask(
+    override fun signInWithCustomToken(token: String): Task<SignInWithCustomTokenResponse> =
+        RetrofitUtils.callToTask(
             this.firebaseApi.signInWithCustomToken(
                 SignInWithCustomTokenRequest(token)
             )
@@ -105,10 +103,9 @@ class RestAuthProvider(app: FirebaseApp, apiKey: String = app.options.apiKey) : 
             Log.e(TAG, "signInWithCustomToken: failed", e)
             this.currentUser = null
         }
-    }
 
-    override fun signInWithEmail(email: String, password: String): Task<SignInWithEmailResponse> {
-        return RetrofitUtils.callToTask(
+    override fun signInWithEmail(email: String, password: String): Task<SignInWithEmailResponse> =
+        RetrofitUtils.callToTask(
             this.firebaseApi.signInWithPassword(
                 SignInWithEmailRequest(email, password)
             )
@@ -118,10 +115,9 @@ class RestAuthProvider(app: FirebaseApp, apiKey: String = app.options.apiKey) : 
             Log.e(TAG, "signInWithEmail: failed", e)
             this.currentUser = null
         }
-    }
 
-    override fun signUpWithEmail(email: String, password: String): Task<SignUpWithEmailResponse> {
-        return RetrofitUtils.callToTask(
+    override fun signUpWithEmail(email: String, password: String): Task<SignUpWithEmailResponse> =
+        RetrofitUtils.callToTask(
             this.firebaseApi.signUpWithEmail(
                 SignInWithEmailRequest(email, password)
             )
@@ -131,37 +127,28 @@ class RestAuthProvider(app: FirebaseApp, apiKey: String = app.options.apiKey) : 
             Log.e(TAG, "signUpWithEmail: failed", e)
             this.currentUser = null
         }
-    }
 
     override fun signInWithGoogle(
         idToken: String,
         provider: String
-    ): Task<SignInWithCredentialResponse> {
-        val task = RetrofitUtils.callToTask(
-            this.firebaseApi.signInWithCredential(
-                SignInWithCredentialRequest(
-                    postBody = "id_token=$idToken&providerId=$provider",
-                    returnSecureToken = true,
-                    returnIdpCredential = true,
-                    requestUri = "http://localhost"
-                )
+    ): Task<SignInWithCredentialResponse> = RetrofitUtils.callToTask(
+        this.firebaseApi.signInWithCredential(
+            SignInWithCredentialRequest(
+                postBody = "id_token=$idToken&providerId=$provider",
+                returnSecureToken = true,
+                returnIdpCredential = true,
+                requestUri = "http://localhost"
             )
         )
-
-        task.addOnSuccessListener { res ->
-            this.currentUser = FirebaseRestAuthUser(
-                idToken = res.idToken,
-                refreshToken = res.refreshToken
-            )
-            Log.d(TAG, "signInWithCredential: successful!, uid: ${currentUser?.userId}")
-        }
-
-        task.addOnFailureListener { e ->
-            Log.e(TAG, "signInWithCredential: failed", e)
-            this.currentUser = null
-        }
-
-        return task
+    ).addOnSuccessListener { res ->
+        this.currentUser = FirebaseRestAuthUser(
+            idToken = res.idToken,
+            refreshToken = res.refreshToken
+        )
+        Log.d(TAG, "signInWithCredential: successful!, uid: ${currentUser?.userId}")
+    }.addOnFailureListener { e ->
+        Log.e(TAG, "signInWithCredential: failed", e)
+        this.currentUser = null
     }
 
     override fun signOut() {
