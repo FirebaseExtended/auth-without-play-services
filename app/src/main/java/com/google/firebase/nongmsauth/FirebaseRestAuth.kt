@@ -18,7 +18,10 @@ package com.google.firebase.nongmsauth
 import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.internal.InternalAuthProvider
-import com.google.firebase.nongmsauth.api.types.firebase.SignInAnonymouslyResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithCustomTokenResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInWithEmailResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignInAnonymouslyResponse
+import com.google.firebase.nongmsauth.api.types.identitytoolkit.SignUpWithEmailResponse
 import com.google.firebase.nongmsauth.api.types.firebase.SignInWithCredentialResponse
 import com.google.firebase.nongmsauth.internal.RestAuthProvider
 interface FirebaseRestAuth : InternalAuthProvider {
@@ -27,6 +30,9 @@ interface FirebaseRestAuth : InternalAuthProvider {
     var currentUser: FirebaseRestAuthUser?
 
     fun signInAnonymously(): Task<SignInAnonymouslyResponse>
+    fun signInWithCustomToken(token: String): Task<SignInWithCustomTokenResponse>
+    fun signInWithEmail(email: String, password: String): Task<SignInWithEmailResponse>
+    fun signUpWithEmail(email: String, password: String): Task<SignUpWithEmailResponse>
     fun signOut()
     fun signInWithGoogle(idToken: String, provider: String = "google.com"): Task<SignInWithCredentialResponse>
 

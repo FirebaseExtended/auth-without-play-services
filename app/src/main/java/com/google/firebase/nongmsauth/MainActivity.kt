@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
             }
     }
 
-    fun updateUI() {
+    private fun updateUI() {
         val user = auth.currentUser
         val signedIn = user != null
 
@@ -155,11 +155,11 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         Log.e(TAG, res.errorMessage.toString())
     }
 
-    fun snackbar(msg: String) {
+    private fun snackbar(msg: String) {
         Snackbar.make(findViewById(android.R.id.content), msg, Snackbar.LENGTH_SHORT).show()
     }
 
     companion object {
-        const val TAG = "MainActivity"
+        private val TAG = MainActivity::class.java.simpleName
     }
 }

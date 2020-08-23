@@ -11,7 +11,13 @@ The following Firebase products which depend on Firebase Authentication should w
   * Cloud Storage
 
 
-## Disclaimer
+## Status
+
+![Status: Experimental](https://img.shields.io/badge/Status-Experimental-blue)
+
+This repository is maintained by Googlers but is not a supported Firebase product.  Issues here are answered by maintainers and other community members on GitHub on a best-effort basis.
+
+## Limitations
 
 It's important to understand the limitations of this sample code:
 
@@ -71,8 +77,8 @@ The implementation of the authentication flow is in `RestAuthProvider`, which is
 
 ### Authentication
 
-For simplicity, this example only implements anonymous authentication. Implementing more authentication
-methods is left as an exercise to the reader.
+For simplicity, this example only implements anonymous, email / password, and custom authentication methods. 
+Implementing more authentication methods (like Facebook or Twitter) is left as an exercise to the reader.
 
 Using the `FirebaseRestAuth` class should be familiar to `FirebaseAuth` users:
 
@@ -91,7 +97,8 @@ if (auth.currentUser == null) {
 }
 ```
 
-To sign in, simply call `signInAnonymously` which returns a `Task`:
+To sign in anonymously, simply call one of the `signIn...` methods on `FirebaseRestAuth`
+such as`signInAnonymously` which returns a `Task`:
 
 ```kotlin
 auth.signInAnonymously()
