@@ -81,16 +81,17 @@ class RestAuthProvider(app: FirebaseApp, apiKey: String = app.options.apiKey) : 
         this.currentUser = userStorage.get()
     }
 
-    override fun signInAnonymously(): Task<SignInAnonymouslyResponse> = RetrofitUtils.callToTask(
-        this.firebaseApi.signInAnonymously(
-            SignInAnonymouslyRequest()
-        )
-    ).addOnSuccessListener { res ->
-        this.currentUser = FirebaseRestAuthUser(res.idToken, res.refreshToken)
-    }.addOnFailureListener { e ->
-        Log.e(TAG, "signInAnonymously: failed", e)
-        this.currentUser = null
-    }
+    override fun signInAnonymously(): Task<SignInAnonymouslyResponse> =
+        RetrofitUtils.callToTask(
+            this.firebaseApi.signInAnonymously(
+                SignInAnonymouslyRequest()
+            )
+        ).addOnSuccessListener { res ->
+            this.currentUser = FirebaseRestAuthUser(res.idToken, res.refreshToken)
+        }.addOnFailureListener { e ->
+            Log.e(TAG, "signInAnonymously: failed", e)
+            this.currentUser = null
+        }
 
     override fun signInWithCustomToken(token: String): Task<SignInWithCustomTokenResponse> =
         RetrofitUtils.callToTask(
@@ -131,25 +132,26 @@ class RestAuthProvider(app: FirebaseApp, apiKey: String = app.options.apiKey) : 
     override fun signInWithGoogle(
         idToken: String,
         provider: String
-    ): Task<SignInWithCredentialResponse> = RetrofitUtils.callToTask(
-        this.firebaseApi.signInWithCredential(
-            SignInWithCredentialRequest(
-                postBody = "id_token=$idToken&providerId=$provider",
-                returnSecureToken = true,
-                returnIdpCredential = true,
-                requestUri = "http://localhost"
+    ): Task<SignInWithCredentialResponse> =
+        RetrofitUtils.callToTask(
+            this.firebaseApi.signInWithCredential(
+                SignInWithCredentialRequest(
+                    postBody = "id_token=$idToken&providerId=$provider",
+                    returnSecureToken = true,
+                    returnIdpCredential = true,
+                    requestUri = "http://localhost"
+                )
             )
-        )
-    ).addOnSuccessListener { res ->
-        this.currentUser = FirebaseRestAuthUser(
-            idToken = res.idToken,
-            refreshToken = res.refreshToken
-        )
-        Log.d(TAG, "signInWithCredential: successful!, uid: ${currentUser?.userId}")
-    }.addOnFailureListener { e ->
-        Log.e(TAG, "signInWithCredential: failed", e)
-        this.currentUser = null
-    }
+        ).addOnSuccessListener { res ->
+            this.currentUser = FirebaseRestAuthUser(
+                idToken = res.idToken,
+                refreshToken = res.refreshToken
+            )
+            Log.d(TAG, "signInWithCredential: successful!, uid: ${currentUser?.userId}")
+        }.addOnFailureListener { e ->
+            Log.e(TAG, "signInWithCredential: failed", e)
+            this.currentUser = null
+        }
 
     override fun signOut() {
         this.currentUser = null
