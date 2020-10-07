@@ -10,6 +10,8 @@ The following Firebase products which depend on Firebase Authentication should w
   * Cloud Functions for Firebase
   * Cloud Storage
 
+For more information on the relationship between Firebase SDKs and Play services, see this page:
+https://firebase.google.com/docs/android/android-play-services
 
 ## Status
 
