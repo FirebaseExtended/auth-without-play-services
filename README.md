@@ -1,5 +1,15 @@
 # Firebase Authentication without Google Play services
 
+## Status
+
+![Status: Archived](https://img.shields.io/badge/Status-Archived-red)
+
+As of [version `20.0.0` of the Firebase Authentication SDK](https://firebase.google.com/support/release-notes/android#auth_v20-0-0), Firebase Authentication no longer requires Google Play services! The workaround demonstrated here is no longer necessary.
+
+This sample is no longer actively maintained and is left here for reference only.
+
+## Overview
+
 This sample shows how to implement a Firebase `InternalAuthProvider` on top of the Firebase Authentication REST API,
 allowing your app to use many Firebase products on devices without Google Play services.
 
@@ -12,12 +22,6 @@ The following Firebase products which depend on Firebase Authentication should w
 
 For more information on the relationship between Firebase SDKs and Play services, see this page:
 https://firebase.google.com/docs/android/android-play-services
-
-## Status
-
-![Status: Experimental](https://img.shields.io/badge/Status-Experimental-blue)
-
-This repository is maintained by Googlers but is not a supported Firebase product.  Issues here are answered by maintainers and other community members on GitHub on a best-effort basis.
 
 ## Limitations
 
